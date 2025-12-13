@@ -3,7 +3,7 @@ name: 构建多平台可执行程序
 on:
   push:
     branches:
-      - main # 监听 main 分支的推送，不再强制要求手动推送 Tag
+      - main
 
 jobs:
   build:
@@ -13,17 +13,11 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            artifact_name: ogame-windows
-            asset_name: ogame-windows.zip
-            executable: ogame.exe
+            executable: ogame-windows.exe
           - os: ubuntu-latest
-            artifact_name: ogame-linux
-            asset_name: ogame-linux.tar.gz
-            executable: ogame
+            executable: ogame-linux
           - os: macos-latest
-            artifact_name: ogame-macos
-            asset_name: ogame-macos.tar.gz
-            executable: ogame
+            executable: ogame-macos
 
     steps:
       - uses: actions/checkout@v4
@@ -33,39 +27,32 @@ jobs:
         with:
           bun-version: latest
 
-      # --- 关键步骤：读取 package.json 的版本号 ---
-      - name: Get version from package.json
+      # 获取 package.json 中的版本号
+      - name: Get version
         id: get_version
         shell: bash
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "VERSION=v$VERSION" >> $GITHUB_OUTPUT
-          echo "Detected version: v$VERSION"
 
       - name: Install Dependencies
         run: bun install
 
+      # 构建前端 Vue 项目
       - name: Build Vue Frontend
         run: bun run build
 
-      - name: Compile Executable
-        run: bun build ./server.js --compile --outfile ${{ matrix.executable }}
-
-      - name: Package Assets (Windows)
-        if: matrix.os == 'windows-latest'
-        run: Compress-Archive -Path "${{ matrix.executable }}", "docs" -DestinationPath "${{ matrix.asset_name }}"
-
-      - name: Package Assets (Linux/macOS)
-        if: matrix.os != 'windows-latest'
-        run: tar -czvf ${{ matrix.asset_name }} ${{ matrix.executable }} docs/
+      # 编译单文件二进制程序
+      - name: Compile Single Executable
+        run: |
+          bun build ./server.js --compile --minify --outfile ${{ matrix.executable }}
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact_name }}
-          path: ${{ matrix.asset_name }}
+          name: ${{ matrix.executable }}
+          path: ${{ matrix.executable }}
 
-    # 将版本号传递给 release 任务
     outputs:
       app_version: ${{ steps.get_version.outputs.VERSION }}
 
@@ -81,16 +68,12 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          # 使用从 build 任务传递过来的版本号
           tag_name: ${{ needs.build.outputs.app_version }}
           name: Release ${{ needs.build.outputs.app_version }}
-          draft: false
-          prerelease: false
-          # 自动创建 Tag (非常重要)
-          generate_release_notes: true
           files: |
-            ogame-windows/ogame-windows.zip
-            ogame-linux/ogame-linux.tar.gz
-            ogame-macos/ogame-macos.tar.gz
+            ogame-windows.exe/ogame-windows.exe
+            ogame-linux/ogame-linux
+            ogame-macos/ogame-macos
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
