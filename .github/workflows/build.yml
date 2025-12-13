@@ -49,11 +49,11 @@ jobs:
       # 3. 打包静态资源与可执行程序 (关键步骤)
       - name: Package Assets (Windows)
         if: matrix.os == 'windows-latest'
-        run: Compress-Archive -Path "${{ matrix.executable }}", "dist" -DestinationPath "${{ matrix.asset_name }}"
+        run: Compress-Archive -Path "${{ matrix.executable }}", "docs" -DestinationPath "${{ matrix.asset_name }}"
 
       - name: Package Assets (Linux/macOS)
         if: matrix.os != 'windows-latest'
-        run: tar -czvf ${{ matrix.asset_name }} ${{ matrix.executable }} dist/
+        run: tar -czvf ${{ matrix.asset_name }} ${{ matrix.executable }} docs/
 
       # 4. 上传到构建产物 (用于下一步 Release)
       - name: Upload Artifact
