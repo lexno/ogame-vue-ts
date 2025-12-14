@@ -101,43 +101,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1. 获取版本号
       - name: Get Version
         id: get_version
         run: echo "VERSION=v$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
-      # 2. 下载所有 Artifact (注意这里会平铺所有文件)
-      - name: Download All Artifacts
+      # 1. 下载时，不使用 merge-multiple，防止覆盖冲突
+      - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
-          path: ./release-dir
-          merge-multiple: true # 关键：将所有构建出的 .exe, .dmg 平铺到 release-dir 根目录
+          path: ./raw-assets
 
-      # 3. 清理不需要的中间产物 (排除 unpacked 等目录)
-      - name: Prepare Assets
-        shell: bash
+      # 2. 核心步骤：手动移动文件到一个扁平目录，并强制重命名
+      - name: Flatten and Rename Assets
         run: |
-          cd ./release-dir
-          # 只保留安装程序后缀，删除所有文件夹和杂质文件
-          # 这样能确保不上传 electron 产生的 win-unpacked 等目录
-          find . -maxdepth 1 -type d -not -path '.' -exec rm -rf {} +
-          # 查看一下最终要上传的文件列表，方便调试
-          ls -R
+          mkdir -p ./final-release
+          
+          # 移动 Server 文件并确保名字唯一
+          # 注意：根据你之前的附件，Artifact 名字是 server-windows-amd64
+          cp ./raw-assets/server-windows-amd64/ogame-server-win.exe ./final-release/ogame-server-win.exe || cp ./raw-assets/server-windows-amd64/server-windows-amd64.exe ./final-release/ogame-server-win.exe || true
+          cp ./raw-assets/server-linux-amd64/ogame-server-linux ./final-release/ogame-server-linux || true
+          cp ./raw-assets/server-linux-arm64/ogame-server-linux-arm64 ./final-release/ogame-server-linux-arm64 || true
+          
+          # 移动 Electron 安装包 (排除 unpacked 目录)
+          find ./raw-assets/electron-* -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.zip" \) -exec cp {} ./final-release/ \;
+          
+          # 检查结果
+          echo "Final assets to upload:"
+          ls -R ./final-release
 
-      # 4. 上传到 GitHub Release
-      - name: Create and Upload Release
+      # 3. 一次性上传，禁止重复匹配
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.get_version.outputs.VERSION }}
           name: Release ${{ steps.get_version.outputs.VERSION }}
-          # 核心修复：直接上传目录下的所有安装包，不再手动写死文件名避免 404
-          files: |
-            ./release-dir/*.exe
-            ./release-dir/*.dmg
-            ./release-dir/*.AppImage
-            ./release-dir/*.zip
-            ./release-dir/server-*
-            ./release-dir/ogame-*
+          # 重点：只上传这个干净目录下的所有文件，不要再写具体的通配符防止重复
+          files: ./final-release/*
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
