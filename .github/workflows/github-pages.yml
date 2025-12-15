@@ -24,15 +24,10 @@ jobs:
         with:
           node-version: 20 # 建议使用 LTS 版本
 
-      - name: 设置 pnpm（启用 pnpm 缓存）
+      - name: 安装 pnpm 并构建前端
         uses: pnpm/action-setup@v4
         with:
-          version: 10
-          run_install: false
-          cache: true
-
-      - name: 安装依赖
-        run: pnpm install
+          run_install: true
 
       - name: 构建前端项目
         run: pnpm run build
