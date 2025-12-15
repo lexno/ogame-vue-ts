@@ -1,0 +1,23 @@
+name: 部署到GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 代码检出
+        uses: actions/checkout@v6
+
+      - name: 构建前端页面
+        run: |
+          npm install -g pnpm && pnpm install
+          pnpm run build
+
+      - name: 推送到 Github
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: docs
+          branch: gh-pages
