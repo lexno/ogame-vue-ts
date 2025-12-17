@@ -41,27 +41,27 @@ export const useGameStore = defineStore('game', {
       giftRejectedNotifications: [],
       points: 0,
       isGMEnabled: false, // 明确设置 GM 模式默认为 false
-      lastVersionCheckTime: 0, // 最后一次检查版本的时间戳，默认为0
-      notificationSettings: {
-        browser: false,
-        inApp: true,
-        suppressInFocus: false,
-        types: {
-          construction: true,
-          research: true
-        }
-      }
+      lastVersionCheckTime: 0 // 最后一次检查版本的时间戳，默认为0
     } as Player,
     currentPlanetId: '',
     isDark: '',
-    locale: 'zh-CN' as Locale
+    locale: 'zh-CN' as Locale,
+    notificationSettings: {
+      browser: false,
+      inApp: true,
+      suppressInFocus: false,
+      types: {
+        construction: true,
+        research: true
+      }
+    }
   }),
   actions: {
     async requestBrowserPermission(): Promise<boolean> {
       if (!('Notification' in window)) return false
-      
+
       if (Notification.permission === 'granted') return true
-      
+
       const permission = await Notification.requestPermission()
       return permission === 'granted'
     }

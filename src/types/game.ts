@@ -574,8 +574,6 @@ export interface Player {
   diplomaticReports?: DiplomaticReport[] // 外交变化报告
   // 新手引导字段
   tutorialProgress?: TutorialProgress // 新手引导进度
-  // 通知设置
-  notificationSettings?: NotificationSettings
 }
 
 export interface NotificationSettings {

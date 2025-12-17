@@ -103,16 +103,16 @@
               <h3 class="font-medium">{{ t('settings.browserNotifications') }}</h3>
               <p class="text-sm text-muted-foreground">{{ t('settings.browserPermission') }}</p>
             </div>
-            <Switch :checked="gameStore.player.notificationSettings?.browser" @update:checked="handleBrowserSwitch" />
+            <Switch :checked="gameStore.notificationSettings?.browser" @update:checked="handleBrowserSwitch" />
           </div>
 
           <!-- 页面聚焦时不发送 -->
-          <div class="flex items-center justify-between pl-4 border-l-2" :class="{ 'opacity-50 pointer-events-none': !gameStore.player.notificationSettings?.browser }">
+          <div class="flex items-center justify-between pl-4 border-l-2" :class="{ 'opacity-50 pointer-events-none': !gameStore.notificationSettings?.browser }">
             <Label class="font-normal">{{ t('settings.suppressInFocus') }}</Label>
              <Switch
-              :checked="gameStore.player.notificationSettings?.suppressInFocus"
+              :checked="gameStore.notificationSettings?.suppressInFocus"
               @update:checked="updateSuppressSetting"
-              :disabled="!gameStore.player.notificationSettings?.browser"
+              :disabled="!gameStore.notificationSettings?.browser"
             />
           </div>
         </div>
@@ -124,7 +124,7 @@
             <p class="text-sm text-muted-foreground">{{ t('settings.inAppNotificationsDesc') || t('settings.inAppNotifications') }}</p>
           </div>
           <Switch
-            :checked="gameStore.player.notificationSettings?.inApp"
+            :checked="gameStore.notificationSettings?.inApp"
             @update:checked="(val: boolean) => updateInAppSetting(val)"
           />
         </div>
@@ -151,7 +151,7 @@
             <div class="flex items-center justify-between">
               <Label class="font-normal cursor-pointer" @click="toggleType('construction')">{{ t('settings.constructionComplete') }}</Label>
               <Switch
-                :checked="gameStore.player.notificationSettings?.types.construction"
+                :checked="gameStore.notificationSettings?.types.construction"
                 @update:checked="(val: boolean) => updateTypeSetting('construction', val)"
               />
             </div>
@@ -159,7 +159,7 @@
             <div class="flex items-center justify-between">
                <Label class="font-normal cursor-pointer" @click="toggleType('research')">{{ t('settings.researchComplete') }}</Label>
                <Switch
-                :checked="gameStore.player.notificationSettings?.types.research"
+                :checked="gameStore.notificationSettings?.types.research"
                 @update:checked="(val: boolean) => updateTypeSetting('research', val)"
               />
             </div>
@@ -279,8 +279,8 @@
   const isTypesExpanded = ref(false)
 
   // Ensure notification settings exist
-  if (!gameStore.player.notificationSettings) {
-    gameStore.player.notificationSettings = {
+  if (!gameStore.notificationSettings) {
+    gameStore.notificationSettings = {
       browser: false,
       inApp: true,
       suppressInFocus: false,
@@ -289,7 +289,7 @@
   }
 
   const areMainSwitchesOff = computed(() => {
-    const s = gameStore.player.notificationSettings
+    const s = gameStore.notificationSettings
     return !s?.browser && !s?.inApp
   })
 
@@ -299,44 +299,44 @@
   // })
 
   const updateInAppSetting = (val: boolean) => {
-    if (gameStore.player.notificationSettings) {
-      gameStore.player.notificationSettings.inApp = val
+    if (gameStore.notificationSettings) {
+      gameStore.notificationSettings.inApp = val
     }
   }
 
   const updateSuppressSetting = (val: boolean) => {
-    if (gameStore.player.notificationSettings) {
-      gameStore.player.notificationSettings.suppressInFocus = val
+    if (gameStore.notificationSettings) {
+      gameStore.notificationSettings.suppressInFocus = val
     }
   }
 
   const updateTypeSetting = (key: string, val: boolean) => {
-    if (gameStore.player.notificationSettings) {
-      gameStore.player.notificationSettings.types[key] = val
+    if (gameStore.notificationSettings) {
+      gameStore.notificationSettings.types[key] = val
     }
   }
 
   const toggleType = (key: string) => {
-    if (gameStore.player.notificationSettings) {
-      const current = gameStore.player.notificationSettings.types[key]
-      gameStore.player.notificationSettings.types[key] = !current
+    if (gameStore.notificationSettings) {
+      const current = gameStore.notificationSettings.types[key]
+      gameStore.notificationSettings.types[key] = !current
     }
   }
 
   const handleBrowserSwitch = async (checked: boolean) => {
-    if (!gameStore.player.notificationSettings) return
+    if (!gameStore.notificationSettings) return
 
     if (checked) {
       const granted = await gameStore.requestBrowserPermission()
       if (granted) {
-        gameStore.player.notificationSettings.browser = true
+        gameStore.notificationSettings.browser = true
         toast.success(t('settings.permissionGranted'))
       } else {
-        gameStore.player.notificationSettings.browser = false
+        gameStore.notificationSettings.browser = false
         toast.error(t('settings.permissionDenied'))
       }
     } else {
-      gameStore.player.notificationSettings.browser = false
+      gameStore.notificationSettings.browser = false
     }
   }
 

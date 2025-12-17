@@ -508,7 +508,7 @@
   const updateInfo = ref<VersionInfo | null>(null)
 
   const handleNotification = (type: string, itemType: string, level?: number) => {
-    const settings = gameStore.player.notificationSettings
+    const settings = gameStore.notificationSettings
     if (!settings) return
 
     // 检查主开关
