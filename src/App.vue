@@ -319,9 +319,22 @@
 
         <!-- 内容区域 -->
         <main class="flex-1 overflow-y-auto">
-          <div class="animate-fade-in">
-            <RouterView />
-          </div>
+          <Transition name="page" mode="out-in">
+            <div key=$route.fullPath class="h-full">
+              <StarsBackground
+                  v-if="isDark"
+                  :factor="0.05"
+                  :speed="50"
+                  star-color="#fff"
+                  class="h-full"
+              >
+                <RouterView class="h-full" />
+              </StarsBackground>
+              <div v-else class="h-full">
+                <RouterView class="h-full" />
+              </div>
+            </div>
+          </Transition>
         </main>
       </div>
     </SidebarInset>
@@ -444,6 +457,7 @@
   import { toast } from 'vue-sonner'
   import { migrateGameData } from '@/utils/migration'
   import { checkLatestVersion } from '@/utils/versionCheck'
+  import {StarsBackground} from "@/components/ui/bg-stars";
 
   // 执行数据迁移（在 store 初始化之前）
   migrateGameData()
