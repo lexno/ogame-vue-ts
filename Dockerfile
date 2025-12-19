@@ -1,22 +1,37 @@
-FROM node:lts-alpine AS builder
+FROM node:20-alpine AS builder
 
-RUN mkdir -p /workspace
-WORKDIR /workspace
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
-RUN apk update && apk add git
-RUN npm config set registry https://registry.npmmirror.com
-RUN git clone https://github.com/setube/ogame-vue-ts.git
-RUN mv ./ogame-vue-ts/* . ; rm -rf ./ogame-vue-ts/
+# 设置工作目录
+WORKDIR /app
 
-RUN npm install -g pnpm ; pnpm install;
+# 复制 package 文件
+COPY package.json pnpm-lock.yaml ./
+
+# 安装 pnpm
+RUN npm install -g pnpm@latest
+
+# 安装依赖
+RUN pnpm install --frozen-lockfile
+
+# 复制源代码
+COPY . .
+
+# 构建项目
 RUN pnpm run build
 
+# 生产阶段
 FROM nginx:alpine
 
+# 复制 nginx 配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
+# 清空默认目录
 RUN rm -rf /usr/share/nginx/html/*
-COPY --from=builder /workspace/docs /usr/share/nginx/html
 
+# 从构建阶段复制构建结果
+COPY --from=builder /app/docs /usr/share/nginx/html
+
+# 暴露端口
 EXPOSE 80
+
+# 启动 nginx
 CMD ["nginx", "-g", "daemon off;"]
